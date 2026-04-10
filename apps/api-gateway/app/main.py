@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.auth import router as auth_router
 from app.api.v1.notes import router as notes_router
@@ -14,11 +14,12 @@ app = FastAPI(title="Second Brain API", version="1.0.0")
 # Security middleware (rate limiting, security headers)
 app.add_middleware(SecurityMiddleware)
 
-# CORS middleware
+# CORS middleware — allow all origins so Vercel frontend can connect.
+# For production hardening, set FRONTEND_URL env var and restrict this.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Your React dev server origin
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

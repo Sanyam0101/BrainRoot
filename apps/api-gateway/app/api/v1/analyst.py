@@ -5,14 +5,21 @@ from typing import List, Optional
 from app.deps.database import get_db_connection, get_neo4j_session
 from app.deps.auth import get_current_user
 from app.schemas.auth import UserResponse
-from sentence_transformers import SentenceTransformer
 from collections import Counter
 import time
 import re
 
-router = APIRouter(prefix="/analyst", tags=["analyst"])
+# Lazy-loaded — only initialized on first /analyst/ask request
+_embedding_model = None
 
-embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+def get_embedding_model():
+    global _embedding_model
+    if _embedding_model is None:
+        from sentence_transformers import SentenceTransformer
+        _embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+    return _embedding_model
+
+router = APIRouter(prefix="/analyst", tags=["analyst"])
 
 class AnalystQuery(BaseModel):
     query: str
@@ -278,7 +285,7 @@ async def ask_analyst(
     start = time.time()
     
     # 1. Semantic vector search
-    query_embedding = embedding_model.encode(request.query)
+    query_embedding = get_embedding_model().encode(request.query)
     embedding_str = '[' + ','.join(map(str, query_embedding.tolist())) + ']'
     
     search_query = '''
