@@ -62,7 +62,9 @@ async def sync_notes_to_neo4j(
         for note in notes:
             note_id = str(note['id'])
             user_id = str(note['user_id'])
-            title = note['content'][:50] + "..." if len(note['content']) > 50 else note['content']
+            content = note['content'] or ""
+            title = content[:50] + "..." if len(content) > 50 else content
+            title = title or "Untitled Idea"
             tags = note['tags'] or []
 
             # Create/update the Idea node

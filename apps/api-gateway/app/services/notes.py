@@ -38,7 +38,7 @@ class NotesService:
         # Simpler query without type casting
         query = '''
             INSERT INTO notes (user_id, content, tags, embedding)
-            VALUES ($1, $2, $3, $4)
+            VALUES ($1, $2, $3, $4::vector)
             RETURNING id, user_id, content, tags, created_at
         '''
         row = await conn.fetchrow(
@@ -79,10 +79,10 @@ class NotesService:
         # Search with cosine distance
         search_query = '''
             SELECT id, user_id, content, tags, created_at,
-                   1 - (embedding <=> $1) as similarity_score
+                   1 - (embedding <=> $1::vector) as similarity_score
             FROM notes 
             WHERE user_id = $2
-            ORDER BY embedding <=> $1
+            ORDER BY embedding <=> $1::vector
             LIMIT $3
         '''
         rows = await conn.fetch(search_query, embedding_str, user_id, limit)
@@ -168,7 +168,7 @@ class NotesService:
             updates.append(f"content = ${param_count}")
             params.append(note_data.content)
             param_count += 1
-            updates.append(f"embedding = ${param_count}")
+            updates.append(f"embedding = ${param_count}::vector")
             params.append(embedding_str)
             param_count += 1
         
